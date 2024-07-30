@@ -93,7 +93,7 @@ class KategoriController extends Controller
             $kategori->save();
             return response()->json([
                 'success' => true,
-                'message' => 'data berhasil dibuat',
+                'message' => 'data berhasil diperbarui',
                 'data' => $kategori,
             ], 200);
         } catch (\Exception $e) {
@@ -102,6 +102,24 @@ class KategoriController extends Controller
                 'message' => 'terjadi kesalahan',
                 'errors' => $e->getMessage(),
             ], 500);
+        }
+    }
+
+    public function destroy($id)
+    {
+        try {
+            $kategori = Kategori::findOrFail($id);
+            $kategori->delete();
+            return response()->json([
+                'success' => true,
+                'message' => 'kategori ' . $kategori->nama_kategori . ' berhasil dihapus',
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'data tidak ditemukan',
+                'errors' => $e->getMessage(),
+            ], 404);
         }
     }
 }
