@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Berita;
 use Illuminate\Http\Request;
+use Storage;
 use Str;
 use Validator;
 
@@ -42,7 +43,7 @@ class BeritaController extends Controller
 
         try {
             // upload foto
-            $path = $request->file('foto')->store('berita');
+            $path = $request->file('foto')->store('public/berita');
 
             $berita = new Berita;
             $berita->judul = $request->judul;
@@ -71,35 +72,93 @@ class BeritaController extends Controller
 
     }
 
-    /**
-     * Display the specified resource.
-     */
     public function show(string $id)
     {
-        //
+        try {
+            $berita = Berita::findOrFail($id)->with('kategori', 'tag', 'user')->first();
+            return response()->json([
+                'success' => true,
+                'message' => 'detail berita',
+                'data' => $berita,
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'berita tidak ditemukan',
+                'errors' => $e->getMessage(),
+            ], 404);
+        }
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(Request $request, string $id)
     {
-        //
-    }
+        $validator = Validator::make($request->all(), [
+            'judul' => 'required',
+            'deskripsi' => 'required',
+            'foto' => 'nullable|image|mimes:png,jpg|max:2048',
+            'id_kategori' => 'required',
+            'tag' => 'required|array',
+            'id_user' => 'required',
+        ]);
 
-    /**
-     * Remove the specified resource from storage.
-     */
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'validasi gagal',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        try {
+            $berita = Berita::findOrFail($id);
+            // hapus foto lama
+            if ($request->hasFile('foto')) {
+                Storage::delete($berita->foto);
+                $path = $request->file('foto')->store('public/berita');
+                $berita->foto = $path;
+            }
+            $berita->judul = $request->judul;
+            $berita->slug = Str::slug($request->judul);
+            $berita->deskripsi = $request->deskripsi;
+            $berita->id_user = $request->id_user;
+            $berita->id_kategori = $request->id_kategori;
+            $berita->save();
+
+            // melampirkan banyak tag
+            $berita->tag()->sync($request->tag);
+            return response()->json([
+                'success' => true,
+                'message' => 'berita berhasil diperbarui',
+                'data' => $berita,
+            ], 201);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'terjadi kesalahan',
+                'errors' => $e->getMessage(),
+            ], 500);
+
+        }
+    }
     public function destroy(string $id)
     {
-        //
+        try {
+            $berita = Berita::findOrFail($id);
+            // hapus tag berita
+            $berita->tag()->detach();
+            // hapus foto
+            Storage::delete($berita->foto);
+            $berita->delete();
+            return response()->json([
+                'success' => true,
+                'message' => 'berita ' . $berita->judul . ' berhasil dihapus',
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'berita tidak ditemukan',
+                'errors' => $e->getMessage(),
+            ], 404);
+        }
     }
 }
