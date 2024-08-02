@@ -14,7 +14,7 @@
                     </div>
                     @endif
 
-                    Selamat Datang @guest @else <b> {{Auth::user->name}} </b> @endguest
+                    Selamat Datang @guest @else <b> {{Auth::user()->name}} </b> @endguest
                 </div>
             </div>
         </div>
