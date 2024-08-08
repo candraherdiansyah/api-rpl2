@@ -23,9 +23,9 @@ Route::post('register', [AuthController::class, 'register']);
 Route::post('login', [AuthController::class, 'login']);
 
 // Route::middleware(['auth:sanctum'])->group(function () {
-Route::post('logout', [AuthController::class, 'logout']);
-Route::resource('kategori', KategoriController::class)->except(['edit', 'create']);
-Route::resource('tag', TagController::class)->except(['edit', 'create']);
-Route::resource('user', UserController::class)->except(['edit', 'create']);
-Route::resource('berita', BeritaController::class)->except(['edit', 'create']);
+    Route::post('logout', [AuthController::class, 'logout']);
+    Route::resource('kategori', KategoriController::class)->except(['edit', 'create']);
+    Route::resource('tag', TagController::class)->except(['edit', 'create']);
+    Route::resource('user', UserController::class)->except(['edit', 'create']);
+    Route::resource('berita', BeritaController::class)->except(['edit', 'create']);
 // });
